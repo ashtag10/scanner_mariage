@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Container, Paper, Box, Typography, Snackbar } from '@mui/material';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material/styles';
+import { ThemeProvider, createTheme} from '@mui/material/styles';
+import {CssBaseline} from '@mui/material';
 import { Login } from './components/Login';
 import { Scanner } from './components/Scanner';
 import { ManualInput } from './components/ManualInput';
