@@ -51,7 +51,7 @@ export const Scanner: React.FC<ScannerProps> = ({ onScan, loading, message }) =>
         onScan(decodedText);
         stopScanner();
       },
-      (error) => {}
+      () => {}
     );
 
     setCameraActive(true);

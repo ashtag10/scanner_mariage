@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Container, Paper, Box, Typography, CircularProgress, Snackbar } from '@mui/material';
+import { Container, Paper, Box, Typography, Snackbar } from '@mui/material';
+// Supprime CircularProgress de la ligne ci-dessus car il n'est pas utilisé
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Login } from './components/Login';
 import { Scanner } from './components/Scanner';
@@ -36,18 +37,15 @@ function App() {
     setMessage({ text: "Vérification en cours...", type: 'info' });
 
     try {
-      // Nettoyer le code : extraire l'ID si c'est une URL
       let cleanCode = code.trim();
       console.log("Code brut:", cleanCode);
       
-      // Si c'est une URL, extraire la dernière partie
       if (cleanCode.startsWith('http')) {
         const parts = cleanCode.split('/');
         cleanCode = parts[parts.length - 1];
         console.log("Code nettoyé:", cleanCode);
       }
       
-      // Utiliser le proxy pour éviter CORS
       const url = `${PROXY_URL}${GOOGLE_SCRIPT_URL}?code=${encodeURIComponent(cleanCode)}`;
       console.log("URL appelée:", url);
       

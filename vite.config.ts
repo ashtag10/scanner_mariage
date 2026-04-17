@@ -6,4 +6,7 @@ export default defineConfig({
   server: {
     https: false, // Important pour la caméra sur certains navigateurs
   },
+  build: {
+    outDir: 'dist',
+  },
 })
