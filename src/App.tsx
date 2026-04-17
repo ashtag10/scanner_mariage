@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Container, Paper, Box, Typography, Snackbar, createTheme, ThemeProvider, CssBaseline } from '@mui/material';
+import { Container, Paper, Box, Typography, Snackbar } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material/styles';
 import { Login } from './components/Login';
 import { Scanner } from './components/Scanner';
 import { ManualInput } from './components/ManualInput';
@@ -11,15 +12,10 @@ interface Message {
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWZAGVk2FsL933QFzS3LTt1YcOZQuiZI377rL2rZV34sPKB1myrVyjQqTGXAx5cUBC9Q/exec";
 
-// Thème personnalisé avec vos couleurs
 const theme = createTheme({
   palette: {
-    primary: { main: '#005f57' },   // Vert émeraude
-    secondary: { main: '#e87433' },  // Orange/rouille
-    background: { default: '#f5f5f5' },
-  },
-  typography: {
-    fontFamily: "'Segoe UI', 'Roboto', sans-serif",
+    primary: { main: '#005f57' },
+    secondary: { main: '#e87433' },
   },
 });
 
@@ -28,7 +24,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
 
-  const verifyCode = (code: string) => {
+  const verifyCode = async (code: string) => {
     if (!code) {
       setMessage({ text: "QR Code non détecté, réessayez", type: 'error' });
       return;
@@ -43,41 +39,32 @@ function App() {
       cleanCode = parts[parts.length - 1];
     }
     
-    const callbackName = 'jsonp_callback_' + Date.now();
-    
-    const script = document.createElement('script');
-    const url = `${GOOGLE_SCRIPT_URL}?code=${encodeURIComponent(cleanCode)}&callback=${callbackName}`;
-    
-    (window as any)[callbackName] = (result: string) => {
+    console.log("Code à vérifier:", cleanCode);
+
+    try {
+      // Utiliser fetch directement (CORS devrait être moins strict en HTTPS)
+      const url = `${GOOGLE_SCRIPT_URL}?code=${encodeURIComponent(cleanCode)}`;
+      console.log("URL appelée:", url);
+      
+      const response = await fetch(url);
+      const result = await response.text();
+      console.log("Réponse reçue:", result);
+
       if (result.includes("✅")) {
         setMessage({ text: result, type: 'success' });
         if (navigator.vibrate) navigator.vibrate(200);
       } else {
         setMessage({ text: result, type: 'error' });
       }
-      delete (window as any)[callbackName];
-      document.body.removeChild(script);
+    } catch (error) {
+      console.error("Erreur détaillée:", error);
+      setMessage({ 
+        text: "Erreur de connexion: " + (error as Error).message, 
+        type: 'error' 
+      });
+    } finally {
       setLoading(false);
-    };
-    
-    script.onerror = () => {
-      setMessage({ text: "Erreur de connexion au serveur", type: 'error' });
-      delete (window as any)[callbackName];
-      document.body.removeChild(script);
-      setLoading(false);
-    };
-    
-    script.src = url;
-    document.body.appendChild(script);
-    
-    setTimeout(() => {
-      if ((window as any)[callbackName]) {
-        setMessage({ text: "Timeout - Vérifiez votre connexion", type: 'error' });
-        delete (window as any)[callbackName];
-        if (document.body.contains(script)) document.body.removeChild(script);
-        setLoading(false);
-      }
-    }, 15000);
+    }
   };
 
   if (!authenticated) {
