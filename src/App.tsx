@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Container, Paper, Box, Typography, Snackbar } from '@mui/material';
 // Supprime CircularProgress de la ligne ci-dessus car il n'est pas utilisé
 import { ThemeProvider, createTheme } from '@mui/material/styles';
