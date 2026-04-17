@@ -12,7 +12,6 @@ interface Message {
 }
 
 // Utiliser le proxy CORS local
-const PROXY_URL = "http://localhost:8080/";
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWZAGVk2FsL933QFzS3LTt1YcOZQuiZI377rL2rZV34sPKB1myrVyjQqTGXAx5cUBC9Q/exec";
 
 const theme = createTheme({
@@ -46,7 +45,7 @@ function App() {
         console.log("Code nettoyé:", cleanCode);
       }
       
-      const url = `${PROXY_URL}${GOOGLE_SCRIPT_URL}?code=${encodeURIComponent(cleanCode)}`;
+      const url = `${GOOGLE_SCRIPT_URL}?code=${encodeURIComponent(cleanCode)}`;
       console.log("URL appelée:", url);
       
       const response = await fetch(url);
