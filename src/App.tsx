@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { Container, Paper, Box, Typography, Snackbar } from '@mui/material';
-// Supprime CircularProgress de la ligne ci-dessus car il n'est pas utilisé
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Container, Paper, Box, Typography, Snackbar, createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { Login } from './components/Login';
 import { Scanner } from './components/Scanner';
 import { ManualInput } from './components/ManualInput';
@@ -11,13 +9,17 @@ interface Message {
   type: 'success' | 'error' | 'info';
 }
 
-// Utiliser le proxy CORS local
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWZAGVk2FsL933QFzS3LTt1YcOZQuiZI377rL2rZV34sPKB1myrVyjQqTGXAx5cUBC9Q/exec";
 
+// Thème personnalisé avec vos couleurs
 const theme = createTheme({
   palette: {
-    primary: { main: '#7c3aed' },
-    secondary: { main: '#ec4899' },
+    primary: { main: '#005f57' },   // Vert émeraude
+    secondary: { main: '#e87433' },  // Orange/rouille
+    background: { default: '#f5f5f5' },
+  },
+  typography: {
+    fontFamily: "'Segoe UI', 'Roboto', sans-serif",
   },
 });
 
@@ -26,7 +28,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
 
-  const verifyCode = async (code: string) => {
+  const verifyCode = (code: string) => {
     if (!code) {
       setMessage({ text: "QR Code non détecté, réessayez", type: 'error' });
       return;
@@ -35,43 +37,53 @@ function App() {
     setLoading(true);
     setMessage({ text: "Vérification en cours...", type: 'info' });
 
-    try {
-      let cleanCode = code.trim();
-      console.log("Code brut:", cleanCode);
-      
-      if (cleanCode.startsWith('http')) {
-        const parts = cleanCode.split('/');
-        cleanCode = parts[parts.length - 1];
-        console.log("Code nettoyé:", cleanCode);
-      }
-      
-      const url = `${GOOGLE_SCRIPT_URL}?code=${encodeURIComponent(cleanCode)}`;
-      console.log("URL appelée:", url);
-      
-      const response = await fetch(url);
-      const result = await response.text();
-      console.log("Réponse:", result);
-
+    let cleanCode = code.trim();
+    if (cleanCode.startsWith('http')) {
+      const parts = cleanCode.split('/');
+      cleanCode = parts[parts.length - 1];
+    }
+    
+    const callbackName = 'jsonp_callback_' + Date.now();
+    
+    const script = document.createElement('script');
+    const url = `${GOOGLE_SCRIPT_URL}?code=${encodeURIComponent(cleanCode)}&callback=${callbackName}`;
+    
+    (window as any)[callbackName] = (result: string) => {
       if (result.includes("✅")) {
         setMessage({ text: result, type: 'success' });
         if (navigator.vibrate) navigator.vibrate(200);
       } else {
         setMessage({ text: result, type: 'error' });
       }
-    } catch (error) {
-      console.error("Erreur:", error);
-      setMessage({ 
-        text: "Erreur de connexion: " + (error as Error).message, 
-        type: 'error' 
-      });
-    } finally {
+      delete (window as any)[callbackName];
+      document.body.removeChild(script);
       setLoading(false);
-    }
+    };
+    
+    script.onerror = () => {
+      setMessage({ text: "Erreur de connexion au serveur", type: 'error' });
+      delete (window as any)[callbackName];
+      document.body.removeChild(script);
+      setLoading(false);
+    };
+    
+    script.src = url;
+    document.body.appendChild(script);
+    
+    setTimeout(() => {
+      if ((window as any)[callbackName]) {
+        setMessage({ text: "Timeout - Vérifiez votre connexion", type: 'error' });
+        delete (window as any)[callbackName];
+        if (document.body.contains(script)) document.body.removeChild(script);
+        setLoading(false);
+      }
+    }, 15000);
   };
 
   if (!authenticated) {
     return (
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', py: 4 }}>
           <Login onLogin={() => setAuthenticated(true)} />
         </Container>
@@ -81,31 +93,41 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 }, minHeight: '100vh' }}>
-        <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden' }}>
-          <Box sx={{ bgcolor: 'primary.main', p: 2 }}>
-            <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
-              🎟️ Contrôle des Entrées
-            </Typography>
-          </Box>
-
-          <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Scanner onScan={verifyCode} loading={loading} message={message} />
-            
-            <Box sx={{ my: 3, textAlign: 'center' }}>
-              <Typography variant="body2" color="textSecondary">— ou —</Typography>
+      <CssBaseline />
+      <Box sx={{
+        minHeight: '100vh',
+        backgroundImage: `url('https://i.imgur.com/Y9eVOjg.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        py: { xs: 2, sm: 4 },
+      }}>
+        <Container maxWidth="md">
+          <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden', bgcolor: 'rgba(255,255,255,0.95)' }}>
+            <Box sx={{ bgcolor: '#005f57', p: 2 }}>
+              <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+                🎟️ Contrôle des Entrées
+              </Typography>
             </Box>
-            
-            <ManualInput onVerify={verifyCode} loading={loading} />
-          </Box>
-        </Paper>
 
-        <Snackbar
-          open={loading}
-          message="Vérification en cours..."
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        />
-      </Container>
+            <Box sx={{ p: { xs: 2, sm: 3 } }}>
+              <Scanner onScan={verifyCode} loading={loading} message={message} />
+              
+              <Box sx={{ my: 3, textAlign: 'center' }}>
+                <Typography variant="body2" color="#e87433">— ou —</Typography>
+              </Box>
+              
+              <ManualInput onVerify={verifyCode} loading={loading} />
+            </Box>
+          </Paper>
+
+          <Snackbar
+            open={loading}
+            message="Vérification en cours..."
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          />
+        </Container>
+      </Box>
     </ThemeProvider>
   );
 }
