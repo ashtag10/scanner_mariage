@@ -1,3 +1,3 @@
 export { Login } from './Login';
-export { Scanner } from './Scanner';
+export { UploadScanner } from './UploadScanner';
 export { ManualInput } from './ManualInput';
