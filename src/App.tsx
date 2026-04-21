@@ -10,7 +10,7 @@ interface Message {
   type: 'success' | 'error' | 'info';
 }
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWZAGVk2FsL933QFzS3LTt1YcOZQuiZI377rL2rZV34sPKB1myrVyjQqTGXAx5cUBC9Q/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGzbxai3Tvq-poAP-7q3idvtn3lnuLgbkmLHTNhmPzib_vDGnmV-3HsRz77yq-laonJA/exec";
 
 const theme = createTheme({
   palette: {
